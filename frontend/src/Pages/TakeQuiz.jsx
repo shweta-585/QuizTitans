@@ -14,16 +14,18 @@ const TakeQuiz = () => {
 
   const { quizId } = useParams();
 
+  const API = `${import.meta.env.VITE_BACKEND_URL}/quiz/${quizId}`;
+
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_REACT_SERVER_PORT}/quiz/${quizId}`)
+      .get(API)
       .then((response) => {
         SetQues(response.data);
       })
       .catch((err) => {
         console.log(err);
       });
-  }, []);
+  }, [API]);
 
   const ShuffleOptions = (quiz) => {
     const combinedOpts = quiz.wrongAnswers.concat(quiz.correctAnswer);
