@@ -1,15 +1,16 @@
 import { useState } from "react";
 import axios from "axios";
-import { Button, FormControl, InputLabel, MenuItem } from "@mui/material";
+import { FormControl, InputLabel, MenuItem } from "@mui/material";
 import Select from "@mui/material/Select";
 import { useLocation } from "react-router-dom";
 import styles from "../styles/quiz-ques-maker.module.css";
 
-const QuizTest = (props) => {
+const QuizTest = () => {
   const loc = useLocation();
   const { title, describe, domain } = loc.state;
+
   const [quizData, SetquizData] = useState({
-    title: title,
+    title,
     describe,
     domain,
     questions: [
@@ -24,12 +25,10 @@ const QuizTest = (props) => {
   });
 
   const [selectedType, setSelectedType] = useState("");
-
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const [errorMessage, setErrorMessage] = useState("");
 
   const types = [
     { label: "MCQ", value: "mcq" },
-    { label: "Subjective", value: "long_ans" },
     { label: "True/False", value: "true_false" },
   ];
 
@@ -53,9 +52,7 @@ const QuizTest = (props) => {
         questions: [...prev.questions, newData],
       }));
     } else {
-      setErrorMessage(
-        "Please select a question type before adding a new question."
-      );
+      setErrorMessage("Please select a question type before adding a new question.");
     }
   };
 
@@ -80,8 +77,7 @@ const QuizTest = (props) => {
 
   const uploadQuiz = async () => {
     for (let i = 0; i < quizData.questions.length; i++) {
-      const { question, correctAnswer, wrongAnswers, type } =
-        quizData.questions[i];
+      const { question, correctAnswer, wrongAnswers, type } = quizData.questions[i];
 
       if (
         type === "mcq" &&
@@ -93,30 +89,15 @@ const QuizTest = (props) => {
         return;
       }
 
-      if (
-        type === "true_false" &&
-        (!question.trim() || !correctAnswer.trim())
-      ) {
+      if (type === "true_false" && (!question.trim() || !correctAnswer.trim())) {
         setErrorMessage(`Please complete the True/False question ${i + 1}.`);
         return;
       }
-
-      if (type === "long_ans" && !question.trim()) {
-        setErrorMessage(
-          `Please provide a question for the subjective question ${i + 1}.`
-        );
-        return;
-      }
     }
-    
+
     try {
       const response = await axios.post(
-        // for localhost
         `${import.meta.env.SERVER_PORT}/quiz/questions`,
-        // for production
-        // it is not working cause hobby plan only gives max 5sec for API requests ( atlas )
-        // it is working wrong uri
-        // "https://quiz-titans.vercel.app/quiz/questions",
         quizData
       );
       setErrorMessage("");
@@ -127,133 +108,105 @@ const QuizTest = (props) => {
   };
 
   return (
-    <>
-      <div className={styles.create_quiz_div}>
-        <div className={styles.header_section}>
-            <h1>{quizData.title}</h1>
-            <p>{quizData.describe}</p>
-        </div>
-        {quizData.questions.map((data, index) => (
-          <div className={styles.quiz_container} key={index}>
-            <textarea
-              name="question"
-              value={data.question}
-              placeholder="add new question"
-              onChange={(e) =>
-                handleInputChange(index, "question", e.target.value)
-              }
-            ></textarea>
-
-            {data.type === "mcq" && (
-              <>
-                <textarea
-                  name="correct-answer"
-                  placeholder="add correct answer"
-                  value={data.correctAnswer}
-                  onChange={(e) =>
-                    handleInputChange(index, "correctAnswer", e.target.value)
-                  }
-                ></textarea>
-
-                {data.wrongAnswers.map((answer, i) => (
-                  <textarea
-                    key={`wrong-answer-${index}-${i}`}
-                    value={answer}
-                    placeholder={`wrong answer-${i + 1}`}
-                    onChange={(e) => {
-                      const updatedAnswers = [...data.wrongAnswers];
-                      updatedAnswers[i] = e.target.value;
-                      handleInputChange(index, "wrongAnswers", updatedAnswers);
-                    }}
-                  ></textarea>
-                ))}
-              </>
-            )}
-
-            {data.type === "long_ans" && (
-              <>
-                <textarea
-                  name="long-ans"
-                  value={data.correctAnswer}
-                  id="long-ans"
-                  placeholder="Enter your long answer"
-                  onChange={(e) => {
-                    handleInputChange(index, "correctAnswer", e.target.value);
-                  }}
-                  textarea
-                />
-              </>
-            )}
-
-            {data.type === "true_false" && (
-              <>
-                <label>
-                  <input
-                    type="radio"
-                    name={`true-false-${index}`}
-                    value="true"
-                    onChange={() =>
-                      handleInputChange(index, "correctAnswer", "true")
-                    }
-                  />
-                  True
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={`true-false-${index}`}
-                    value="false"
-                    onChange={() =>
-                      handleInputChange(index, "correctAnswer", "false")
-                    }
-                  />
-                  False
-                </label>
-              </>
-            )}
-
-              <div className={styles.remove_ques}>
-                <button id={`del-${index}`} onClick={handleDelQuestion}>
-                  -
-                </button>
-              </div>
-          </div>
-        ))}
-
-        <div className={styles.add_ques}>
-          <button onClick={handleNewQuestion}>+</button>
-        </div>
-
-        <FormControl sx={{ minWidth: 200, marginTop: 2 }}>
-          <InputLabel id="quiz-type-label">Quiz Type</InputLabel>
-          <Select
-            labelId="quiz-type-label"
-            id="quiz-type"
-            value={selectedType}
-            onChange={handleTypeChange}
-            label="Quiz Type"
-          >
-            {types.map((type) => (
-              <MenuItem key={type.value} value={type.value}>
-                {type.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <div className={styles.upload_quiz}>
-          <button type="submit" onClick={uploadQuiz}>
-            Upload
-          </button>
-        </div>
-
-        {errorMessage && (
-          <div className={styles.error_message}>
-            <p>{errorMessage}</p>
-          </div>
-        )}
+    <div className={styles.create_quiz_div}>
+      <div className={styles.header_section}>
+        <h1>{quizData.title}</h1>
+        <p>{quizData.describe}</p>
       </div>
-    </>
+
+      {quizData.questions.map((data, index) => (
+        <div className={styles.quiz_container} key={index}>
+          <textarea
+            name="question"
+            value={data.question}
+            placeholder="add new question"
+            onChange={(e) => handleInputChange(index, "question", e.target.value)}
+          ></textarea>
+
+          {data.type === "mcq" && (
+            <>
+              <textarea
+                name="correct-answer"
+                placeholder="add correct answer"
+                value={data.correctAnswer}
+                onChange={(e) => handleInputChange(index, "correctAnswer", e.target.value)}
+              ></textarea>
+
+              {data.wrongAnswers.map((answer, i) => (
+                <textarea
+                  key={`wrong-answer-${index}-${i}`}
+                  value={answer}
+                  placeholder={`wrong answer-${i + 1}`}
+                  onChange={(e) => {
+                    const updatedAnswers = [...data.wrongAnswers];
+                    updatedAnswers[i] = e.target.value;
+                    handleInputChange(index, "wrongAnswers", updatedAnswers);
+                  }}
+                ></textarea>
+              ))}
+            </>
+          )}
+
+          {data.type === "true_false" && (
+            <>
+              <label>
+                <input
+                  type="radio"
+                  name={`true-false-${index}`}
+                  value="true"
+                  onChange={() => handleInputChange(index, "correctAnswer", "true")}
+                />
+                True
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name={`true-false-${index}`}
+                  value="false"
+                  onChange={() => handleInputChange(index, "correctAnswer", "false")}
+                />
+                False
+              </label>
+            </>
+          )}
+
+          <div className={styles.remove_ques}>
+            <button id={`del-${index}`} onClick={handleDelQuestion}>-</button>
+          </div>
+        </div>
+      ))}
+
+      <div className={styles.add_ques}>
+        <button onClick={handleNewQuestion}>+</button>
+      </div>
+
+      <FormControl sx={{ minWidth: 200, marginTop: 2 }}>
+        <InputLabel id="quiz-type-label">Quiz Type</InputLabel>
+        <Select
+          labelId="quiz-type-label"
+          id="quiz-type"
+          value={selectedType}
+          onChange={handleTypeChange}
+          label="Quiz Type"
+        >
+          {types.map((type) => (
+            <MenuItem key={type.value} value={type.value}>
+              {type.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <div className={styles.upload_quiz}>
+        <button type="submit" onClick={uploadQuiz}>Upload</button>
+      </div>
+
+      {errorMessage && (
+        <div className={styles.error_message}>
+          <p>{errorMessage}</p>
+        </div>
+      )}
+    </div>
   );
 };
 

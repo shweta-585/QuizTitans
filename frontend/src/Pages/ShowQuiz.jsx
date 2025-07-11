@@ -20,7 +20,6 @@ const ShowQuiz = () => {
 
   const API = `${import.meta.env.VITE_BACKEND_URL}/quiz/all`;
 
-  // Fetch Quiz Data
   useEffect(() => {
     axios
       .get(API)
@@ -53,14 +52,18 @@ const ShowQuiz = () => {
             className={styles.swiper_container}
           >
             {QuizData.filter((d) => d.domain === dom).map((d) => (
+
               <SwiperSlide key={d._id} className={styles.quiz_item}>
-                <h2>{d.title}</h2>
-                <h4>{d.domain}</h4>
-                <p>{d.describe}</p>
+                <div className={styles.quiz_text}>
+                  <h2>{d.title}</h2>
+                  <h4>{d.domain}</h4>
+                  <p>{d.describe}</p>
+                </div>
                 <Link className={styles.quiz_btn} to={`/quiz/take/${d._id}`}>
                   Take Quiz
                 </Link>
               </SwiperSlide>
+
             ))}
           </Swiper>
         </div>

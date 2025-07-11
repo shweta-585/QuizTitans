@@ -1,6 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Root from "./Pages/Root";
-import Home from "./Pages/Home";
 import QuizCreate from "./Pages/QuizCreate";
 import QuizMaker from "./Pages/QuizMaker";
 import TakeQuiz from "./Pages/TakeQuiz";

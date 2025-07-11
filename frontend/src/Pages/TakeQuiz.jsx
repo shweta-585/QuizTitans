@@ -1,128 +1,120 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Form, Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styles from "../styles/take-quiz.module.css";
 
 const TakeQuiz = () => {
-
-  const [Ques, SetQues] = useState({
+  const [quiz, setQuiz] = useState({
     title: "",
     describe: "",
     domain: "",
     questions: [],
   });
 
-  const { quizId } = useParams();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [selected, setSelected] = useState(null);
 
+  const { quizId } = useParams();
   const API = `${import.meta.env.VITE_BACKEND_URL}/quiz/${quizId}`;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
       .get(API)
       .then((response) => {
-        SetQues(response.data);
+        setQuiz(response.data);
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => console.error(err));
   }, [API]);
 
+  const handleOptionClick = (option) => {
+    setSelected(option);
+  };
+
+  const handleNext = () => {
+    const currQues = quiz.questions[currentIndex];
+    const name = currQues.type === "mcq" ? `mcq-opt${currentIndex}` : `bool-opt${currentIndex}`;
+
+    setAnswers((prev) => ({
+      ...prev,
+      [name]: selected,
+    }));
+
+    setSelected(null);
+    if (currentIndex + 1 < quiz.questions.length) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      navigate("/quiz/score", { state: [answers, quiz] });
+    }
+  };
+
   const ShuffleOptions = (quiz) => {
-    const combinedOpts = quiz.wrongAnswers.concat(quiz.correctAnswer);
-    combinedOpts.sort(() => Math.random() - 0.5);
-    return combinedOpts;
+    const opts = [...quiz.wrongAnswers, quiz.correctAnswer];
+    return opts.sort(() => Math.random() - 0.5);
   };
 
-  const nav = useNavigate();
-
-  const handleSubmit = (event) => {
-    event.preventDefault(); // Prevent page reload
-
-    const quizData = new FormData(event.target);
-
-    const formDataObject = {};
-    quizData.forEach((value, key) => {
-      formDataObject[key] = value;
-    });
-
-    nav("/quiz/score", {state:[formDataObject, Ques] });
-
-  };
+  const currQues = quiz.questions[currentIndex];
 
   return (
-    <div className={styles.main_container}>
+    <div className={styles.quiz_wrapper}>
+      <div className={styles.quiz_header}>
+        <h2>{quiz.title}</h2>
+        <p>{quiz.describe}</p>
+        <p>{quiz.domain}</p>
+        <div className={styles.progress}>Question {currentIndex + 1}/{quiz.questions.length}</div>
+      </div>
 
-        <Form className={styles.quiz_container} onSubmit={handleSubmit}>
+      {currQues && (
+        <div className={styles.quiz_card}>
+          {currQues.image && (
+            <img src={currQues.image} alt="quiz" className={styles.quiz_image} />
+          )}
 
-          <div className={styles.quiz_header}>
-            <h2 className={styles.title}>{Ques.title}</h2>
-            <p className={styles.describe}>{Ques.describe}</p>
-            <p className={styles.domain}>{Ques.domain}</p>
+          <h3 className={styles.question}>{currQues.question}</h3>
+
+          <div className={styles.options}>
+            {currQues.type === "mcq" &&
+              ShuffleOptions(currQues).map((option, i) => (
+                <button
+                  key={i}
+                  className={`${styles.option_btn} ${selected === option ? styles.selected : ""}`}
+                  onClick={() => handleOptionClick(option)}
+                >
+                  {option}
+                </button>
+              ))}
+
+            {currQues.type === "true_false" && (
+              <>
+                <button
+                  className={`${styles.option_btn} ${selected === "true" ? styles.selected : ""}`}
+                  onClick={() => handleOptionClick("true")}
+                >
+                  True
+                </button>
+                <button
+                  className={`${styles.option_btn} ${selected === "false" ? styles.selected : ""}`}
+                  onClick={() => handleOptionClick("false")}
+                >
+                  False
+                </button>
+              </>
+            )}
           </div>
 
-          <div className={styles.ques_container}>
-
-            {Ques.questions.map((quiz, index) => (
-
-              <div className={styles.quiz_ques} key={index}>
-                <h3>{quiz.question}</h3>
-
-                {quiz.type === "mcq" && (
-                  <div className={styles.opt_box}>
-                      {ShuffleOptions(quiz).map((opt, optIndx) => (
-                      <div key={optIndx} className={styles.option}>
-                        <input
-                          type="radio"
-                          name={`mcq-opt${index}`}
-                          value={opt}
-                        />
-                        <label>{opt}</label>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {quiz.type === "true_false" && (
-                  <div className={styles.opt_box}>
-                    
-                    <div className={styles.option}>
-                      <input
-                        type="radio"
-                        name={`bool-opt${index}`}
-                        value={"true"}
-                      />
-                      <label>True</label>
-                      <input
-                        type="radio"
-                        name={`bool-opt${index}`}
-                        value={"false"}
-                      />
-                      <label>False</label>
-                    </div>
-                  </div>
-                )}
-
-                {quiz.type === "subjective" && (
-                  <div className={styles.answer_box}>
-                    <textarea
-                      name={`subjective-opt${index}`}
-                      className={`answer-area${index}`}
-                      placeholder="enter your answer"
-                      cols={10}
-                    ></textarea>
-                  </div>
-                )}
-
-              </div>
-            ))}
-
-            <button type="submit" className={styles.submit}>
-              Submit
+          <div className={styles.next_btn_container}>
+            <button
+              onClick={handleNext}
+              className={styles.next_btn}
+              disabled={selected === null}
+            >
+              {currentIndex + 1 === quiz.questions.length ? "Submit" : "Next"}
             </button>
-
           </div>
-        </Form>
-
+        </div>
+      )}
     </div>
   );
 };

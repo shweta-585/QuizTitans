@@ -3,9 +3,8 @@ import axios from "axios";
 import { FormControl, InputLabel, MenuItem } from "@mui/material";
 import Select from "@mui/material/Select";
 import { useLocation } from "react-router-dom";
-import styles from "../styles/quiz-ques-maker.module.css";
 
-const QuizTest = (props) => {
+const QuizTest = () => {
   const loc = useLocation();
   const { title, describe, domain } = loc.state;
 
@@ -25,12 +24,10 @@ const QuizTest = (props) => {
   });
 
   const [selectedType, setSelectedType] = useState("");
-
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const [errorMessage, setErrorMessage] = useState("");
 
   const types = [
     { label: "MCQ", value: "mcq" },
-    { label: "Subjective", value: "long_ans" },
     { label: "True/False", value: "true_false" },
   ];
 
@@ -40,7 +37,7 @@ const QuizTest = (props) => {
 
   const handleNewQuestion = () => {
     if (selectedType !== "") {
-      setErrorMessage(""); // Clear error message when adding a valid question
+      setErrorMessage("");
       const newData = {
         index: quizData.questions.length,
         type: selectedType,
@@ -50,13 +47,11 @@ const QuizTest = (props) => {
       };
 
       SetquizData((prev) => ({
-        ...prev, 
-        questions: [...prev.questions, newData], 
+        ...prev,
+        questions: [...prev.questions, newData],
       }));
     } else {
-      setErrorMessage(
-        "Please select a question type before adding a new question."
-      );
+      setErrorMessage("Please select a question type before adding a new question.");
     }
   };
 
@@ -80,12 +75,10 @@ const QuizTest = (props) => {
   };
 
   const uploadQuiz = async () => {
-    // CHECK DATA VALIDITY
     for (let i = 0; i < quizData.questions.length; i++) {
       const { question, correctAnswer, wrongAnswers, type } =
         quizData.questions[i];
 
-      // Validation for MCQ
       if (
         type === "mcq" &&
         (!question.trim() ||
@@ -96,7 +89,6 @@ const QuizTest = (props) => {
         return;
       }
 
-      // Validation for True/False
       if (
         type === "true_false" &&
         (!question.trim() || !correctAnswer.trim())
@@ -104,24 +96,11 @@ const QuizTest = (props) => {
         setErrorMessage(`Please complete the True/False question ${i + 1}.`);
         return;
       }
-
-      // Validation for Subjective
-      if (type === "long_ans" && !question.trim()) {
-        setErrorMessage(
-          `Please provide a question for the subjective question ${i + 1}.`
-        );
-        return;
-      }
     }
 
     try {
       const response = await axios.post(
-        // for localhost
         `${import.meta.env.VITE_REACT_SERVER_PORT}/quiz/questions`,
-        // for production
-        // it is not working cause hobby plan only gives max 5sec for API requests ( atlas )
-        // it is working wrong uri
-        // "https://quiz-titans.vercel.app/quiz/questions",
         quizData
       );
       console.log("Quiz uploaded successfully:", response.data);
@@ -135,8 +114,7 @@ const QuizTest = (props) => {
   return (
     <div className="create-quiz-div">
       {quizData.questions.map((data, index) => (
-        
-        <div className="quiz-container" key={index}>
+        <div key={index}>
           <textarea
             name="question"
             value={data.question}
@@ -169,20 +147,6 @@ const QuizTest = (props) => {
                   }}
                 ></textarea>
               ))}
-            </>
-          )}
-
-          {data.type === "long_ans" && (
-            <>
-              <textarea 
-                name="long-ans" 
-                value={data.correctAnswer}
-                id="long-ans"
-                placeholder="Enter your long answer"
-                onChange={(e) => {
-                  handleInputChange(index, "correctAnswer", e.target.value);
-                }}
-              textarea />
             </>
           )}
 
